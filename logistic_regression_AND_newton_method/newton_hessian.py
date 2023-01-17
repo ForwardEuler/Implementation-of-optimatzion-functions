@@ -2,7 +2,6 @@ import numpy as np
 from numba import njit, prange
 from numpy import ndarray, arange
 from derivativeTest import derivativeTest
-from loadData import loadData
 
 
 @njit()
