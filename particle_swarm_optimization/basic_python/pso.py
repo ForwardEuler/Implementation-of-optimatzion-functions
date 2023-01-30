@@ -39,7 +39,7 @@ def pso(fnc):
         l.append(particle())
     for i in range(max_itr):
         for p in l:
-            p.eval_fitness(fn)
+            p.eval_fitness(fnc)
             p.update_velocity()
             p.update_position()
     print(gbest)
