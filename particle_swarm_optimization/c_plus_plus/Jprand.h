@@ -26,6 +26,10 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * parallel generation of random number library
+ */
+
 #pragma once
 
 #include <random>
@@ -46,5 +50,14 @@ struct seed
         }
     }
 };
-double rand(seed &, int);
+/**
+ * @param seed to use and thread ID
+ * @return random real number in range [0,1)
+ */
+double rand(seed &, int tid);
+/**
+ * @param seed to use and thread ID
+ * @return random real number in range [-1,1)
+ */
+double nrand(seed&, int tid);
 } // namespace Jprand

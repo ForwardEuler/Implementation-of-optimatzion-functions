@@ -25,12 +25,20 @@
 // ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 // POSSIBILITY OF SUCH DAMAGE.
 
+/**
+ * parallel generation of random number
+ */
 #include "Jprand.h"
 namespace Jprand
 {
-static std::uniform_real_distribution<> dis(0.0, 1.0);
+static std::uniform_real_distribution<> dis1(0.0, 1.0);
+static std::uniform_real_distribution<> dis2(-1.0, 1.0);
 double rand(seed &rng, int tid)
 {
-    return dis(rng.srng[tid]);
+    return dis1(rng.srng[tid]);
+}
+double nrand(seed &rng, int tid)
+{
+    return dis2(rng.srng[tid]);
 }
 } // namespace Jprand

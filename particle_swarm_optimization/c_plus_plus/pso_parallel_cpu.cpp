@@ -145,6 +145,6 @@ double test_func3(ArrayXd v)
 
 int main()
 {
-    ArrayXd v = pso(test_func3, 1000000, 2, 100);
+    ArrayXd v = pso(test_func3, 100000, 2, 100);
     std::cout << v << std::endl;
 }
