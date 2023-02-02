@@ -23,13 +23,59 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include <cstdio>
 #include <Eigen/Dense>
 #include <cmath>
+#include <cstdio>
+#include <iostream>
 
+using Eigen::VectorXd;
+class simplex
+{
+  public:
+    double alpha, gamma, pho, delta;
+    VectorXd tuple;
+
+  public:
+    simplex(double alpha = 1, double gamma = 2, double pho = 0.5, double delta = 0.5)
+        : alpha(alpha), gamma(gamma), pho(pho), delta(delta)
+    {
+        tuple = VectorXd(5);
+        tuple.setRandom();
+    }
+    void order()
+    {
+        std::sort(tuple.data(), tuple.data() + tuple.size());
+    }
+    void reflection(double (*fn)(VectorXd))
+    {
+    }
+    void expansion(double (*fn)(VectorXd))
+    {
+    }
+    void contraction(double (*fn)(VectorXd))
+    {
+    }
+    void shrink(double (*fn)(VectorXd))
+    {
+    }
+};
+
+void print_vec(VectorXd vec)
+{
+    int len = vec.size();
+    printf("(");
+    for (int i = 0; i < len - 1; i++)
+    {
+        printf("%lf, ", vec[i]);
+    }
+    printf("%lf)\n", vec[len - 1]);
+}
 
 int main()
 {
-    printf("a");
+    simplex a;
+    print_vec(a.tuple);
+    a.order();
+    print_vec(a.tuple);
     return 0;
 }
