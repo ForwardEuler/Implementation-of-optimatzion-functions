@@ -6,7 +6,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(C:\\PROGRA~0\\include)
 add_executable(c_plus_plus pso_parallel_cpu.cpp Jprand.h Jprand.cpp)
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /openmp /O2")
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -openmp")
-set (CMAKE_CXX_FLAGS "/EHsc /openmp /O2 /GL")
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
+#/EHsc
+set (CMAKE_CXX_FLAGS "/kernel /openmp /GL /Oi")
+MESSAGE( ${CMAKE_CXX_FLAGS_RELEASE_INIT} )
 MESSAGE( STATUS "CMAKE_CXX_FLAGS: " ${CMAKE_CXX_FLAGS} )

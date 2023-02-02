@@ -28,9 +28,8 @@
 #include "Jprand.h"
 #include <Eigen/Dense>
 #include <cmath>
-#include <iostream>
+#include <cstdio>
 #include <omp.h>
-#include <random>
 #include <vector>
 
 using Eigen::ArrayXd;
@@ -40,7 +39,8 @@ static Jprand::seed rng(omp_get_max_threads());
 class partial
 {
   public:
-    static double w, c1, c2;
+    static double w, c1, c2, vmax;
+    static int init_range;
     ArrayXd x;
     ArrayXd v;
     ArrayXd pbest;
@@ -50,13 +50,20 @@ class partial
     {
         x = ArrayXd(d).setRandom();
         v = ArrayXd(d).setRandom();
-        x = x * 10;
+        x = x * init_range;
         pbest = ArrayXd(d).setZero();
         best_fitness = fn(x);
     }
     void update_velocity(ArrayXd &gbest, int tid)
     {
         v = w * v + c1 * rand(rng, tid) * (pbest - x) + c2 * rand(rng, tid) * (gbest - x);
+        for (auto &i : v)
+        {
+            if (i > vmax)
+                i = vmax;
+            if (i < -vmax)
+                i = -vmax;
+        }
     }
     void update_postion()
     {
@@ -80,8 +87,11 @@ template <typename T, typename A> int arg_min(std::vector<T, A> const &vec)
 double partial::w;
 double partial::c1;
 double partial::c2;
+double partial::vmax;
+int partial::init_range;
 
-ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr, int w = 1, int c1 = 2, int c2 = 2)
+ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr,
+            int w = 1, int c1 = 2, int c2 = 2, double vmax = 1, int scale = 10)
 {
     ArrayXd gbest(d);
     double gbest_value;
@@ -90,6 +100,8 @@ ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr, int w = 1, int c1 
     partial::w = w;
     partial::c1 = c1;
     partial::c2 = c2;
+    partial::vmax = vmax;
+    partial::init_range = scale;
 
     partials.resize(n, partial(d, fn));
     gbest = ArrayXd(d).setZero();
@@ -107,6 +119,11 @@ ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr, int w = 1, int c1 
                 partials[j].update_postion();
                 fitness[j] = fn(partials[j].x);
                 partials[j].update_pbest(fitness[j]);
+                //                if (fitness[j] < gbest_value)
+                //                {
+                //                    gbest_value = fitness[j];
+                //                    gbest = partials[j].x;
+                //                }
             }
         }
         int min_index = arg_min(fitness);
@@ -145,6 +162,7 @@ double test_func3(ArrayXd v)
 
 int main()
 {
-    ArrayXd v = pso(test_func3, 100000, 2, 100);
-    std::cout << v << std::endl;
+    ArrayXd v = pso(test_func3, 200, 2, 1000);
+    // std::cout << v << std::endl;
+    printf("argmin at (%lf, %lf)\n", v[0], v[1]);
 }
