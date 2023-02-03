@@ -1,6 +1,6 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import numpy.random as rand
-import matplotlib.pyplot as plt
 from numpy.linalg import norm
 
 

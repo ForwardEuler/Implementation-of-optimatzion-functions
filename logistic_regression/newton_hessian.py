@@ -1,7 +1,31 @@
+#  Copyright (c) 2023, Chuan Tian
+#  All rights reserved.
+#
+#  Redistribution and use in source and binary forms, with or without
+#  modification, are permitted provided that the following conditions are met:
+#
+#  1. Redistributions of source code must retain the above copyright notice, this
+#     list of conditions and the following disclaimer.
+#
+#  2. Redistributions in binary form must reproduce the above copyright notice,
+#     this list of conditions and the following disclaimer in the documentation
+#     and/or other materials provided with the distribution.
+#
+#  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+#  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+#  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+#  DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+#  FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+#  DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+#  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+#  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+#  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+#  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
 import numpy as np
-from numba import njit, prange
-from numpy import ndarray, arange
-from derivativeTest import derivativeTest
+from numba import njit
+from numpy import ndarray
 
 
 @njit()
@@ -18,35 +42,10 @@ def d_phi(x: ndarray) -> ndarray:
     l = np.exp(l) / (1 + np.exp(l))
     r = l * (x <= 12) + (x > 12)
     return r
-    # if x >= 12:
-    #     return 1
-    # else:
-    #     return np.exp(x) / (1 + np.exp(x))
 
 
 @njit()
 def dd_phi(x: ndarray) -> ndarray:
-    cl = (x <= 12) | (x >= -12)
-    r = cl * x
-    r = (np.exp(r) / np.power((1 + np.exp(r)), 2)) * cl
-    return r
-
-
-def phi_(t: ndarray) -> ndarray:
-    l = (t <= 12) * t
-    l = np.log(1 + np.exp(l))
-    r = l * (t <= 12) + (t > 12) * t
-    return r
-
-
-def d_phi_(x: ndarray) -> ndarray:
-    l = (x <= 12) * x
-    l = np.exp(l) / (1 + np.exp(l))
-    r = l * (x <= 12) + (x > 12)
-    return r
-
-
-def dd_phi_(x: ndarray) -> ndarray:
     cl = (x <= 12) | (x >= -12)
     r = cl * x
     r = (np.exp(r) / np.power((1 + np.exp(r)), 2)) * cl
@@ -71,24 +70,6 @@ def logisticFun_numba(x: ndarray, A: ndarray, b: ndarray):
             for k in range(n):
                 # hf[i, j] += dd_phi(A[k] @ x) * A[k, i] * A[k, j]
                 hf[i, j] += (dd_phi_Ax[k] * A[k, i] * A[k, j])[0]
-    return f, df, hf
-
-
-def logisticFun_python(x: ndarray, A: ndarray, b: ndarray):
-    n, d = A.shape[0], A.shape[1]
-    Ax = A @ x
-    v = phi_(Ax) - b * Ax
-    f = np.sum(v)
-    df = np.zeros(d)
-    for j in range(d):
-        for i in range(n):
-            df[j] += d_phi_(A[i] @ x) * A[i, j] - b[i] * A[i, j]
-    hf = np.zeros((d, d))
-    dd_phi_Ax = dd_phi_(A @ x)
-    for i in range(d):
-        for j in range(d):
-            for k in range(n):
-                hf[i, j] += dd_phi_Ax[k] * A[k, i] * A[k, j]
     return f, df, hf
 
 
@@ -122,7 +103,7 @@ def hvp_wrapper(x: ndarray, A: ndarray, b: ndarray):
 
 
 @njit()
-def logisticFunl2(x: ndarray, A: ndarray, b: ndarray, c: float = 1.0):
+def logisticFun(x: ndarray, A: ndarray, b: ndarray, c: float = 1.0):
     x, b = x.reshape(-1, 1), b.reshape(-1, 1)
     n, d = A.shape[0], A.shape[1]
     Ax = A @ x
@@ -180,14 +161,14 @@ def gradient_descent(A: ndarray, b: ndarray, c: float = 1.0):
     return x
 
 
-def newton_CG(A: ndarray, b: ndarray, c: float = 1.0):
+def newton_hessian(A: ndarray, b: ndarray, c: float = 1.0):
     n, d = A.shape[0], A.shape[1]
     x = np.zeros(d)
     x = x.reshape(-1, 1)
     b = b.reshape(-1, 1)
     k, cond = 0, 1
     while cond:
-        _, df, hf = logisticFunl2(x, A, b, c)
+        _, df, hf = logisticFun(x, A, b, c)
         x = x - np.linalg.inv(hf) @ df
         cond = (np.linalg.norm(df) >= 1e-6) & (k < 1000)
         k += 1
@@ -198,32 +179,6 @@ def sigmoid(A, x):
     return 1 / (1 + np.exp(-(A @ x)))
 
 
-@njit()
-def agd(A: ndarray, b: ndarray, c: float = 1.0):
-    k = 4
-    a = (np.sqrt(k) - 1) / (np.sqrt(k) + 1)
-    n, d = A.shape[0], A.shape[1]
-    x = np.zeros(d)
-    lg = 1 / 4 * np.linalg.norm(A) ** 2 + c
-    x, b = x.reshape(-1, 1), b.reshape(-1, 1)
-    x_last = x
-    for m in range(1000):
-        y = x + a * (x - x_last)
-        x_last = x
-        df = np.zeros(d)
-        df = df.reshape(-1, 1)
-        d_phi_Ax = d_phi(A @ x)
-        for j in range(d):
-            for i in range(n):
-                df[j] += (d_phi_Ax[i] * A[i, j] - b[i] * A[i, j])[0]
-        df = df + c * y
-        x = y - df / lg
-        tc = np.linalg.norm(df)
-        if (tc <= 1e-4) & (m < 1000):
-            break
-    return x
-
-
 n, d = 1000, 50
 A = np.random.randn(n, d)
 I = np.eye(2, 1)
@@ -231,20 +186,3 @@ ind = np.random.randint(2, size=n)
 b = I[ind, :]
 x = np.ones((d, 1)).reshape(-1, 1)
 f, df, hf = logisticFun_numba(x, A, b)
-# # fun = lambda x: logisticFun(x, A, b)
-# # fun = lambda x: hvp_wrapper(x, A, b)
-# fun = lambda x: logisticFunl2(x, A, b)
-# derivativeTest(fun, np.ones((d, 1)))
-# # x = gradient_descent(A, b)
-
-# n1 = []
-# fval = []
-# A_train, b_train, A_test, b_test = loadData()
-# # b_train = b_train * 1.00
-# # x = gradient_descent(A_train, b_train)
-# x = newton_CG(A_train, b_train)
-# y_proba = sigmoid(A_test, x)
-
-# from rule_threshold import plot_roc
-# plot_roc(b_test[:,0], y_proba, 'na')
-# y_l = y_p.predict(A_test)
