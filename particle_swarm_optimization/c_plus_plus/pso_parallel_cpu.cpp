@@ -178,7 +178,7 @@ double test_func4(ArrayXd v)
 
 int main()
 {
-    auto fn = test_func1;
+    auto fn = test_func4;
     ArrayXd v = pso(fn, 1000, 2, 1000);
     // std::cout << v << std::endl;
     printf("argmin at (%lf, %lf), f(x) = %lf\n", v[0], v[1], fn(v));
