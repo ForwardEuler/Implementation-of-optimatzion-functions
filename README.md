@@ -1,4 +1,4 @@
-# Implementation of optimatzion algorithms
+# c++ Implementation of optimatzion algorithms
 ### Note:
 Implementation requires header only C++ linear algebra library Eigen (https://eigen.tuxfamily.org/)
 and C++ standard 20+
