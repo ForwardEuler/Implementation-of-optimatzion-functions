@@ -112,29 +112,17 @@ VectorXd nelder_mead(int d)
         {
             VectorXd xc = simplex.contraction(xr, 0);
             if (f(xc) < f_xr)
-            {
                 simplex.points.back() = xc;
-                continue;
-            }
             else
-            {
                 simplex.shrink();
-                continue;
-            }
         }
         else
         {
             VectorXd xc = simplex.contraction(xr, 1);
             if (f(xc) < f(x_last))
-            {
                 simplex.points.back() = xc;
-                continue;
-            }
             else
-            {
                 simplex.shrink();
-                continue;
-            }
         }
         VectorXd ds = simplex.points.back() - simplex.points.front();
         if (ds.norm() < 1e-9)
