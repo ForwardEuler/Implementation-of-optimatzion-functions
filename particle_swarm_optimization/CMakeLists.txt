@@ -5,7 +5,7 @@ project(c_plus_plus)
 set(CMAKE_CXX_STANDARD 20)
 
 include_directories(C:\\PROGRA~0\\include)
-add_executable(c_plus_plus pso_parallel_cpu.cpp Jprand.h Jprand.cpp)
+add_executable(pso_parallel_cpu.h Trand.h test.cpp)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set (CMAKE_CXX_FLAGS "/kernel /openmp /GL /Oi")
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

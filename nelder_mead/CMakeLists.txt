@@ -3,7 +3,7 @@ project(Nelder_Mead)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(fminsearch_Nelder_Mead nelder_mead.cpp)
+add_executable(nelder_mead.h test.cpp)
 include_directories(C:\\PROGRA~0\\include)
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     set (CMAKE_CXX_FLAGS "/kernel /GL /Oi")

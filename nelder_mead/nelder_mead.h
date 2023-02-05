@@ -23,12 +23,16 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
+#ifndef TSOLVER_NELDER_MEAD_H_
+#define TSOLVER_NELDER_MEAD_H_
+
 #include <Eigen/Dense>
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
 #include <numeric>
 
+namespace Tsolver
+{
 using Eigen::VectorXd;
 using std::vector;
 
@@ -39,11 +43,11 @@ class Simplex
     double alpha, gamma, rho, sigma;
     vector<VectorXd> points;
     VectorXd x0;
-    static double (*fn)(VectorXd);
+    double (*fn)(VectorXd);
 
   public:
-    Simplex(int d, double alpha = 1, double gamma = 2, double rho = 0.5, double sigma = 0.5)
-        : d(d), alpha(alpha), gamma(gamma), rho(rho), sigma(sigma)
+    Simplex(int d, double (*fn)(VectorXd), double alpha = 1, double gamma = 2, double rho = 0.5, double sigma = 0.5)
+        : d(d), fn(fn), alpha(alpha), gamma(gamma), rho(rho), sigma(sigma)
     {
         points.resize(d + 1, VectorXd(d));
         for (auto &i : points)
@@ -54,7 +58,7 @@ class Simplex
     }
     void order()
     {
-        std::sort(points.begin(), points.end(), [](const VectorXd &a, const VectorXd &b) { return fn(a) < fn(b); });
+        std::sort(points.begin(), points.end(), [&](const VectorXd &a, const VectorXd &b) { return fn(a) < fn(b); });
         x0 = VectorXd(d).setZero();
         x0 = ((double)1 / d) * std::accumulate(points.begin(), points.begin() + d, x0);
     }
@@ -83,11 +87,9 @@ class Simplex
     }
 };
 
-double (*Simplex::fn)(VectorXd);
-VectorXd nelder_mead(int d)
+VectorXd nelder_mead(double (*f)(VectorXd), int d)
 {
-    auto f = Simplex::fn;
-    Simplex simplex(d);
+    Simplex simplex(d, f);
     bool converge = false;
     for (int i = 0; i < 1000000; i++)
     {
@@ -136,72 +138,5 @@ VectorXd nelder_mead(int d)
         printf("WARNING: algorithm failed to coverage!\n");
     return simplex.points[0];
 }
-
-//================================================================
-//==================++++++TEST FUNCTIONS+++++=====================
-inline double pow2(double x)
-{
-    return pow(x, 2);
-}
-
-double test_func1(VectorXd v)
-{
-    // CROSS-IN-TRAY FUNCTION
-    // argmin: https://www.sfu.ca/~ssurjano/crossit.html
-    double x1 = v[0];
-    double x2 = v[1];
-    double exp_term = abs(100 - sqrt(pow2(x1) + pow2(x2)) / EIGEN_PI);
-    double term = sin(x1) * sin(x2) * exp(exp_term);
-    term = abs(term) + 1;
-    return -0.0001 * pow(term, 0.1);
-}
-
-double test_func2(VectorXd v)
-{
-    // Gomez and Levy function
-    // 4*x^2 - 2.1*x^4 + x^6/3 + x*y - 4*y^2 + 4*y^4
-    // argmin at (-0.898 , 0.1726) and (0.898 , -0.1726)
-    double x = v[0];
-    double y = v[1];
-    double term1 = 4 * pow(x, 2) - 2.1 * pow(x, 4) + 0.333333 * pow(x, 6);
-    double term2 = x * y - 4 * pow(y, 2) + 4 * pow(y, 4);
-    return term1 + term2;
-}
-
-double test_func3(VectorXd v)
-{
-    // f=0 at (1,3)
-    double x = v[0];
-    double y = v[1];
-    return pow(x + 2 * y - 7, 2) + pow(2 * x + y - 5, 2);
-}
-
-double test_func4(VectorXd v)
-{
-    double x1 = v[0];
-    double x2 = v[1];
-    double frac1 = 1 + cos(12 * sqrt(pow2(x1) + pow2(x2)));
-    double frac2 = 0.5 * (pow2(x1) + pow2(x2)) + 2;
-    return -frac1 / frac2;
-}
-
-void print_vec(VectorXd vec)
-{
-    int len = vec.size();
-    printf("(");
-    for (int i = 0; i < len - 1; i++)
-    {
-        printf("%lf, ", vec[i]);
-    }
-    printf("%lf)\n", vec[len - 1]);
-}
-
-int main()
-{
-    Simplex::fn = test_func1;
-    auto x = nelder_mead(2);
-    printf("argmin found at point: ");
-    print_vec(x);
-    printf("f min found is %lf", Simplex::fn(x));
-    return 0;
-}
+} // namespace Tsolver
+#endif

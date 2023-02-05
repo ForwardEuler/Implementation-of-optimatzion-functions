@@ -29,12 +29,13 @@
  * parallel generation of random number library
  */
 
-#pragma once
+#ifndef TCRAND_H_
+#define TCRAND_H_
 
 #include <random>
 #include <vector>
 
-namespace Jprand
+namespace Trand
 {
 struct seed
 {
@@ -49,14 +50,24 @@ struct seed
         }
     }
 };
+
+static std::uniform_real_distribution<> dis1(0.0, 1.0);
+static std::uniform_real_distribution<> dis2(-1.0, 1.0);
 /**
  * @param seed to use and thread ID
  * @return random real number in range [0,1)
  */
-double rand(seed &, int tid);
+double rand(seed &rng, int tid)
+{
+    return dis1(rng.srng[tid]);
+}
 /**
  * @param seed to use and thread ID
  * @return random real number in range [-1,1)
  */
-double nrand(seed&, int tid);
-} // namespace Jprand
+double random(seed &rng, int tid)
+{
+    return dis2(rng.srng[tid]);
+}
+} // namespace Trand
+#endif

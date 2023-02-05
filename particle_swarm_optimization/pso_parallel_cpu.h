@@ -24,16 +24,19 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#include "Jprand.h"
+#ifndef TSOLVER_PSO_H_
+#define TSOLVER_PSO_H_
+#include "Trand.h"
 #include <Eigen/Dense>
 #include <cmath>
-#include <cstdio>
 #include <omp.h>
 #include <vector>
 
+namespace Tsolver
+{
 using Eigen::ArrayXd;
-using Jprand::rand;
-static Jprand::seed rng(omp_get_max_threads());
+using Trand::rand;
+static Trand::seed rng(omp_get_max_threads());
 
 class partial
 {
@@ -89,8 +92,8 @@ double partial::c2;
 double partial::vmax;
 int partial::init_range;
 
-ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr,
-            double vmax = 1, int scale = 10, int w = 1, int c1 = 2, int c2 = 2)
+ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr, double vmax = 1, int scale = 10, int w = 1, int c1 = 2,
+            int c2 = 2)
 {
     ArrayXd gbest(d);
     double gbest_value;
@@ -129,57 +132,5 @@ ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr,
     }
     return gbest;
 }
-
-inline double pow2(double x)
-{
-    return pow(x,2);
-}
-
-double test_func1(ArrayXd v)
-{
-    //CROSS-IN-TRAY FUNCTION
-    //argmin: https://www.sfu.ca/~ssurjano/crossit.html
-    double x1 = v[0];
-    double x2 = v[1];
-    double exp_term = abs(100 - sqrt(pow2(x1) + pow2(x2))/ EIGEN_PI);
-    double term = sin(x1) * sin(x2) * exp(exp_term);
-    term = abs(term) + 1;
-    return -0.0001 * pow(term, 0.1);
-}
-
-double test_func2(ArrayXd v)
-{
-    //Gomez and Levy function
-    //4*x^2 - 2.1*x^4 + x^6/3 + x*y - 4*y^2 + 4*y^4
-    //argmin at (-0.898 , 0.1726) and (0.898 , -0.1726)
-    double x = v[0];
-    double y = v[1];
-    double term1 = 4 * pow(x, 2) - 2.1 * pow(x, 4) + 0.333333 * pow(x, 6);
-    double term2 = x * y - 4 * pow(y, 2) + 4 * pow(y, 4);
-    return term1 + term2;
-}
-
-double test_func3(ArrayXd v)
-{
-    // f=0 at (1,3)
-    double x = v[0];
-    double y = v[1];
-    return pow(x + 2 * y - 7, 2) + pow(2 * x + y - 5, 2);
-}
-
-double test_func4(ArrayXd v)
-{
-    double x1 = v[0];
-    double x2 = v[1];
-    double frac1 = 1 + cos(12*sqrt(pow2(x1)+ pow2(x2)));
-    double frac2 = 0.5*(pow2(x1)+ pow2(x2)) + 2;
-    return -frac1/frac2;
-}
-
-int main()
-{
-    auto fn = test_func4;
-    ArrayXd v = pso(fn, 1000, 2, 1000);
-    // std::cout << v << std::endl;
-    printf("argmin at (%lf, %lf), f(x) = %lf\n", v[0], v[1], fn(v));
-}
+} // namespace Tsolver
+#endif
