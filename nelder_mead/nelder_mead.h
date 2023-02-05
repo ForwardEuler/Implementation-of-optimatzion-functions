@@ -53,7 +53,7 @@ class Simplex
         for (auto &i : points)
         {
             i.setRandom();
-            i = i * 0.3;
+            i = i * 0.1;
         }
     }
     void order()
@@ -64,7 +64,7 @@ class Simplex
     }
     inline VectorXd reflection() const
     {
-        return x0 + rho * (x0 - points.back());
+        return x0 + alpha * (x0 - points.back());
     }
     inline VectorXd expansion(VectorXd &xr) const
     {
@@ -73,9 +73,9 @@ class Simplex
     VectorXd contraction(VectorXd &xr, int id) const
     {
         if (id == 0)
-            return x0 + alpha * (xr - x0);
+            return x0 + rho * (xr - x0);
         else
-            return x0 + alpha * (points.back() - x0);
+            return x0 + rho * (points.back() - x0);
     }
     void shrink()
     {
@@ -100,7 +100,7 @@ VectorXd nelder_mead(double (*f)(VectorXd), int d)
         VectorXd x_last = simplex.points.back();
         double f_xr = f(xr);
         double f_x1 = f(x1);
-        if (f_x1 <= f_xr && f_x1 <= f(xn))
+        if (f_x1 <= f_xr && f_xr < f(xn))
             simplex.points.back() = xr;
         else if (f_xr < f_x1)
         {
@@ -127,9 +127,9 @@ VectorXd nelder_mead(double (*f)(VectorXd), int d)
                 simplex.shrink();
         }
         VectorXd ds = simplex.points.back() - simplex.points.front();
-        if (ds.norm() < 1e-9)
+        if (ds.norm() < 1e-8)
         {
-            printf("Terminal condition met at iteration %d : l2 norm < 1e-9\n", i);
+            printf("Terminal condition met at iteration %d : l2 norm < 1e-8\n", i);
             converge = true;
             break;
         }

@@ -65,7 +65,7 @@ void print_vec(VectorXd vec)
 
 int main()
 {
-    auto fn = test_func1;
+    auto fn = test_func2;
     auto x = Tsolver::nelder_mead(fn, 2);
     printf("argmin found at point: ");
     print_vec(x);
