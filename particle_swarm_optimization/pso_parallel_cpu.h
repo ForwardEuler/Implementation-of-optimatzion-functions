@@ -55,10 +55,10 @@ struct partial
         best_fitness = fn(x);
     }
 
-    void update_velocity(const ArrayXd &gbest, const int tid)
+    void update_velocity(const ArrayXd& gbest, const int tid)
     {
         v = w * v + c1 * rand(rng, tid) * (pbest - x) + c2 * rand(rng, tid) * (gbest - x);
-        for (auto &i : v)
+        for (auto& i : v)
         {
             if (i > vmax)
                 i = vmax;
@@ -82,7 +82,7 @@ struct partial
     }
 };
 
-template <typename T, typename A> int arg_min(const std::vector<T, A> &vec)
+template <typename T, typename A> int arg_min(const std::vector<T, A>& vec)
 {
     return static_cast<int>(std::distance(vec.begin(), min_element(vec.begin(), vec.end())));
 }
@@ -94,8 +94,7 @@ double partial::vmax;
 int partial::init_range;
 
 ArrayXd pso(double (*fn)(const ArrayXd&), const int n, const int d, const int max_itr, const double vmax = 1,
-            const int scale = 10, const int w = 1, const int c1 = 2,
-            const int c2 = 2)
+            const int scale = 10, const int w = 1, const int c1 = 2, const int c2 = 2)
 {
     partial::w = w;
     partial::c1 = c1;

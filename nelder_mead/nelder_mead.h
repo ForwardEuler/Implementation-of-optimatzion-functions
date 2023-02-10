@@ -41,15 +41,14 @@ struct Simplex
     double alpha, gamma, rho, sigma;
     vector<VectorXd> points;
     VectorXd x0;
-    double (*fn)(const VectorXd &);
+    double (*fn)(const VectorXd&);
 
-    Simplex(const int d, double (*fn)(const VectorXd &), const double alpha = 1, const double gamma = 2,
-            const double rho = 0.5,
-            const double sigma = 0.5)
+    Simplex(const int d, double (*fn)(const VectorXd&), const double alpha = 1, const double gamma = 2,
+            const double rho = 0.5, const double sigma = 0.5)
         : d(d), alpha(alpha), gamma(gamma), rho(rho), sigma(sigma), fn(fn)
     {
         points.resize(d + 1, VectorXd(d));
-        for (auto &i : points)
+        for (auto& i : points)
         {
             i.setRandom();
             i = i * 0.1;
@@ -58,9 +57,7 @@ struct Simplex
 
     void order()
     {
-        std::ranges::sort(points, [&](const VectorXd &a, const VectorXd &b) {
-            return fn(a) < fn(b);
-        });
+        std::ranges::sort(points, [&](const VectorXd& a, const VectorXd& b) { return fn(a) < fn(b); });
         x0 = VectorXd(d).setZero();
         x0 = (static_cast<double>(1) / d) * std::accumulate(points.begin(), points.begin() + d, x0);
     }
@@ -70,12 +67,12 @@ struct Simplex
         return x0 + alpha * (x0 - points.back());
     }
 
-    [[nodiscard]] VectorXd expansion(const VectorXd &xr) const
+    [[nodiscard]] VectorXd expansion(const VectorXd& xr) const
     {
         return x0 + gamma * (xr - x0);
     }
 
-    [[nodiscard]] VectorXd contraction(const VectorXd &xr, const int id) const
+    [[nodiscard]] VectorXd contraction(const VectorXd& xr, const int id) const
     {
         if (id == 0)
             return x0 + rho * (xr - x0);
@@ -92,7 +89,7 @@ struct Simplex
     }
 };
 
-inline VectorXd nelder_mead(double (*f)(const VectorXd &), const int d)
+inline VectorXd nelder_mead(double (*f)(const VectorXd&), const int d)
 {
     Simplex simplex(d, f);
     bool converge = false;
