@@ -35,16 +35,14 @@ namespace Tsolver
 using Eigen::VectorXd;
 using std::vector;
 
-class Simplex
+struct Simplex
 {
-public:
     int d;
     double alpha, gamma, rho, sigma;
     vector<VectorXd> points;
     VectorXd x0;
     double (*fn)(const VectorXd &);
 
-public:
     Simplex(const int d, double (*fn)(const VectorXd &), const double alpha = 1, const double gamma = 2,
             const double rho = 0.5,
             const double sigma = 0.5)

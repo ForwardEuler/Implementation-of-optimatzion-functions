@@ -37,9 +37,8 @@ using Eigen::ArrayXd;
 using Trand::rand;
 static Trand::seed rng(omp_get_max_threads());
 
-class partial
+struct partial
 {
-public:
     static double w, c1, c2, vmax;
     static int init_range;
     ArrayXd x;
