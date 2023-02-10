@@ -28,7 +28,6 @@
 
 #include <Eigen/Dense>
 #include <algorithm>
-#include <cmath>
 #include <numeric>
 
 namespace Tsolver
@@ -38,16 +37,18 @@ using std::vector;
 
 class Simplex
 {
-  public:
+public:
     int d;
     double alpha, gamma, rho, sigma;
     vector<VectorXd> points;
     VectorXd x0;
-    double (*fn)(VectorXd);
+    double (*fn)(const VectorXd &);
 
-  public:
-    Simplex(int d, double (*fn)(VectorXd), double alpha = 1, double gamma = 2, double rho = 0.5, double sigma = 0.5)
-        : d(d), fn(fn), alpha(alpha), gamma(gamma), rho(rho), sigma(sigma)
+public:
+    Simplex(const int d, double (*fn)(const VectorXd &), const double alpha = 1, const double gamma = 2,
+            const double rho = 0.5,
+            const double sigma = 0.5)
+        : d(d), alpha(alpha), gamma(gamma), rho(rho), sigma(sigma), fn(fn)
     {
         points.resize(d + 1, VectorXd(d));
         for (auto &i : points)
@@ -56,30 +57,36 @@ class Simplex
             i = i * 0.1;
         }
     }
+
     void order()
     {
-        std::sort(points.begin(), points.end(), [&](const VectorXd &a, const VectorXd &b) { return fn(a) < fn(b); });
+        std::ranges::sort(points, [&](const VectorXd &a, const VectorXd &b) {
+            return fn(a) < fn(b);
+        });
         x0 = VectorXd(d).setZero();
-        x0 = ((double)1 / d) * std::accumulate(points.begin(), points.begin() + d, x0);
+        x0 = (static_cast<double>(1) / d) * std::accumulate(points.begin(), points.begin() + d, x0);
     }
-    inline VectorXd reflection() const
+
+    [[nodiscard]] VectorXd reflection() const
     {
         return x0 + alpha * (x0 - points.back());
     }
-    inline VectorXd expansion(VectorXd &xr) const
+
+    [[nodiscard]] VectorXd expansion(const VectorXd &xr) const
     {
         return x0 + gamma * (xr - x0);
     }
-    VectorXd contraction(VectorXd &xr, int id) const
+
+    [[nodiscard]] VectorXd contraction(const VectorXd &xr, const int id) const
     {
         if (id == 0)
             return x0 + rho * (xr - x0);
-        else
-            return x0 + rho * (points.back() - x0);
+        return x0 + rho * (points.back() - x0);
     }
+
     void shrink()
     {
-        auto s = points.size();
+        const auto s = points.size();
         for (int i = 1; i < s; i++)
         {
             points[i] = points[1] + sigma * (points[i] - points[1]);
@@ -87,24 +94,24 @@ class Simplex
     }
 };
 
-VectorXd nelder_mead(double (*f)(VectorXd), int d)
+inline VectorXd nelder_mead(double (*f)(const VectorXd &), const int d)
 {
     Simplex simplex(d, f);
     bool converge = false;
     for (int i = 0; i < 1000000; i++)
     {
         simplex.order();
-        VectorXd xr = simplex.reflection();
-        VectorXd x1 = simplex.points[1];
-        VectorXd xn = simplex.points[d - 1];
-        VectorXd x_last = simplex.points.back();
-        double f_xr = f(xr);
-        double f_x1 = f(x1);
+        const VectorXd xr = simplex.reflection();
+        const VectorXd x1 = simplex.points[1];
+        const VectorXd xn = simplex.points[d - 1];
+        const VectorXd x_last = simplex.points.back();
+        const double f_xr = f(xr);
+        const double f_x1 = f(x1);
         if (f_x1 <= f_xr && f_xr < f(xn))
             simplex.points.back() = xr;
         else if (f_xr < f_x1)
         {
-            VectorXd xe = simplex.expansion(xr);
+            const VectorXd xe = simplex.expansion(xr);
             if (f(xe) < f_xr)
                 simplex.points.back() = xe;
             else
@@ -112,7 +119,7 @@ VectorXd nelder_mead(double (*f)(VectorXd), int d)
         }
         else if (f_xr < f(x_last))
         {
-            VectorXd xc = simplex.contraction(xr, 0);
+            const VectorXd xc = simplex.contraction(xr, 0);
             if (f(xc) < f_xr)
                 simplex.points.back() = xc;
             else
@@ -120,7 +127,7 @@ VectorXd nelder_mead(double (*f)(VectorXd), int d)
         }
         else
         {
-            VectorXd xc = simplex.contraction(xr, 1);
+            const VectorXd xc = simplex.contraction(xr, 1);
             if (f(xc) < f(x_last))
                 simplex.points.back() = xc;
             else

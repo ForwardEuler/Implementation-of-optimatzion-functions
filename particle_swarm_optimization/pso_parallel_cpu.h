@@ -1,4 +1,3 @@
-
 // Copyright (c) 2023, Chuan Tian
 // All rights reserved.
 //
@@ -40,7 +39,7 @@ static Trand::seed rng(omp_get_max_threads());
 
 class partial
 {
-  public:
+public:
     static double w, c1, c2, vmax;
     static int init_range;
     ArrayXd x;
@@ -48,7 +47,7 @@ class partial
     ArrayXd pbest;
     double best_fitness;
 
-    explicit partial(int d, double (*fn)(ArrayXd))
+    partial(const int d, double (*fn)(const ArrayXd&))
     {
         x = ArrayXd(d).setRandom();
         v = ArrayXd(d).setRandom();
@@ -56,7 +55,8 @@ class partial
         pbest = ArrayXd(d).setZero();
         best_fitness = fn(x);
     }
-    void update_velocity(ArrayXd &gbest, int tid)
+
+    void update_velocity(const ArrayXd &gbest, const int tid)
     {
         v = w * v + c1 * rand(rng, tid) * (pbest - x) + c2 * rand(rng, tid) * (gbest - x);
         for (auto &i : v)
@@ -67,11 +67,13 @@ class partial
                 i = -vmax;
         }
     }
+
     void update_postion()
     {
         x = x + v;
     }
-    void update_pbest(double curr_value)
+
+    void update_pbest(const double curr_value)
     {
         if (curr_value < best_fitness)
         {
@@ -81,7 +83,7 @@ class partial
     }
 };
 
-template <typename T, typename A> int arg_min(std::vector<T, A> const &vec)
+template <typename T, typename A> int arg_min(const std::vector<T, A> &vec)
 {
     return static_cast<int>(std::distance(vec.begin(), min_element(vec.begin(), vec.end())));
 }
@@ -92,18 +94,19 @@ double partial::c2;
 double partial::vmax;
 int partial::init_range;
 
-ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr, double vmax = 1, int scale = 10, int w = 1, int c1 = 2,
-            int c2 = 2)
+ArrayXd pso(double (*fn)(const ArrayXd&), const int n, const int d, const int max_itr, const double vmax = 1,
+            const int scale = 10, const int w = 1, const int c1 = 2,
+            const int c2 = 2)
 {
-    ArrayXd gbest(d);
-    double gbest_value;
-    std::vector<partial> partials;
-
     partial::w = w;
     partial::c1 = c1;
     partial::c2 = c2;
     partial::vmax = vmax;
     partial::init_range = scale;
+
+    std::vector<partial> partials;
+    ArrayXd gbest;
+    double gbest_value;
 
     partials.resize(n, partial(d, fn));
     gbest = ArrayXd(d).setZero();
@@ -113,7 +116,7 @@ ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr, double vmax = 1, i
         std::vector<double> fitness(n);
         #pragma omp parallel
         {
-            int tid = omp_get_thread_num();
+            const int tid = omp_get_thread_num();
             #pragma omp for
             for (int j = 0; j < n; j++)
             {
@@ -123,7 +126,7 @@ ArrayXd pso(double (*fn)(ArrayXd), int n, int d, int max_itr, double vmax = 1, i
                 partials[j].update_pbest(fitness[j]);
             }
         }
-        int min_index = arg_min(fitness);
+        const int min_index = arg_min(fitness);
         if (fitness[min_index] < gbest_value)
         {
             gbest_value = fitness[min_index];
