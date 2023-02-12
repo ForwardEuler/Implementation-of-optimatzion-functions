@@ -107,11 +107,11 @@ inline vector<double> pso(double (*fn)(const double *), int n, int d, int max_it
     Particle::vmax = vmax;
     Particle::init_range = scale;
 
-    std::vector<Particle> partials;
+    std::vector<Particle> particles;
     ArrayXd gbest;
     double gbest_value;
 
-    partials.resize(n, Particle(d, fn));
+    particles.resize(n, Particle(d, fn));
     gbest = ArrayXd(d).setZero();
     gbest_value = fn(gbest.data());
     for (int i = 0; i < max_itr; i++)
@@ -123,17 +123,17 @@ inline vector<double> pso(double (*fn)(const double *), int n, int d, int max_it
             #pragma omp for
             for (int j = 0; j < n; j++)
             {
-                partials[j].update_velocity(gbest, tid);
-                partials[j].update_postion();
-                fitness[j] = fn(partials[j].x.data());
-                partials[j].update_pbest(fitness[j]);
+                particles[j].update_velocity(gbest, tid);
+                particles[j].update_postion();
+                fitness[j] = fn(particles[j].x.data());
+                particles[j].update_pbest(fitness[j]);
             }
         }
         const int min_index = arg_min(fitness);
         if (fitness[min_index] < gbest_value)
         {
             gbest_value = fitness[min_index];
-            gbest = partials[min_index].x;
+            gbest = particles[min_index].x;
         }
     }
     return cast_to_vector(gbest);
