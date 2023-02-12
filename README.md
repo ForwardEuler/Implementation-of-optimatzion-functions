@@ -9,7 +9,7 @@ Algorithm will try to find the global minimum of C function f with signature:
 
 `double f(double*)`
 
-where `double*` is a double array / pointer to f64 array
+where `double*` is a double array / pointer to input vector (f64 array)
 
 the argument `int d` in the algorithm is the dimension of input vector,
 the behavior of program is undefined if `d` is provided with wrong value.
