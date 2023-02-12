@@ -34,7 +34,7 @@ argmin of objective function will be returned as `std::vector<double>`
 
 目标函数的argmin将以`std::vector<double>`的形式返回。
 
-编译粒子群算法需要链接openmp，因只使用了并行for循环，若不需要可直接移除。
+编译粒子群算法需要链接openmp，因只使用了并行for循环，若不需要可直接移除，并设置rand的tid为0即可。
 
 ## TODO
 - [X] C++实现particleswarm
