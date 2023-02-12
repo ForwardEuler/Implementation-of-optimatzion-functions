@@ -1,10 +1,7 @@
-//
-// Created by Master on 2023/2/5.
-//
 #include "nelder_mead.h"
-#include <cstdio>
 #include <Eigen/Dense>
 #include <cmath>
+#include <cstdio>
 
 using Eigen::VectorXd;
 
@@ -13,7 +10,7 @@ inline double pow2(const double x)
     return pow(x, 2);
 }
 
-double test_func1(const VectorXd &v)
+double test_func1(const double* v)
 {
     // CROSS-IN-TRAY FUNCTION
     // argmin: https://www.sfu.ca/~ssurjano/crossit.html
@@ -25,7 +22,7 @@ double test_func1(const VectorXd &v)
     return -0.0001 * pow(term, 0.1);
 }
 
-double test_func2(const VectorXd &v)
+double test_func2(const double* v)
 {
     // Gomez and Levy function
     // 4*x^2 - 2.1*x^4 + x^6/3 + x*y - 4*y^2 + 4*y^4
@@ -37,7 +34,7 @@ double test_func2(const VectorXd &v)
     return term1 + term2;
 }
 
-double test_func3(const VectorXd &v)
+double test_func3(const double* v)
 {
     // f=0 at (1,3)
     const double x = v[0];
@@ -45,7 +42,7 @@ double test_func3(const VectorXd &v)
     return pow(x + 2 * y - 7, 2) + pow(2 * x + y - 5, 2);
 }
 
-double test_func4(const VectorXd &v)
+double test_func4(const double* v)
 {
     const double x1 = v[0];
     const double x2 = v[1];
@@ -54,9 +51,9 @@ double test_func4(const VectorXd &v)
     return -frac1 / frac2;
 }
 
-void print_vec(const VectorXd &vec)
+void print_vec(const std::vector<double>& vec)
 {
-    const int len = vec.size();
+    const auto len = vec.size();
     printf("(");
     for (int i = 0; i < len - 1; i++)
     {
@@ -67,10 +64,10 @@ void print_vec(const VectorXd &vec)
 
 int main()
 {
-    auto fn = test_func1;
+    auto fn = test_func3;
     auto x = Tsolver::nelder_mead(fn, 2);
     printf("argmin found at point: ");
     print_vec(x);
-    printf("f min found is %lf", fn(x));
+    printf("f min found is %lf", fn(x.data()));
     return 0;
 }

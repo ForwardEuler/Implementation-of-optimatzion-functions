@@ -33,8 +33,7 @@
 
 namespace Tsolver
 {
-using Eigen::ArrayXd;
-using Trand::rand;
+using Eigen::ArrayXd, std::vector, Trand::rand;
 static Trand::seed rng(omp_get_max_threads());
 
 struct partial
@@ -46,13 +45,13 @@ struct partial
     ArrayXd pbest;
     double best_fitness;
 
-    partial(const int d, double (*fn)(const ArrayXd&))
+    partial(const int d, double (*fn)(const double *))
     {
         x = ArrayXd(d).setRandom();
         v = ArrayXd(d).setRandom();
         x = x * init_range;
         pbest = ArrayXd(d).setZero();
-        best_fitness = fn(x);
+        best_fitness = fn(x.data());
     }
 
     void update_velocity(const ArrayXd& gbest, const int tid)
@@ -87,14 +86,20 @@ template <typename T, typename A> int arg_min(const std::vector<T, A>& vec)
     return static_cast<int>(std::distance(vec.begin(), min_element(vec.begin(), vec.end())));
 }
 
+inline vector<double> cast_to_vector(const ArrayXd& vxd)
+{
+    auto ret = vector<double>(vxd.data(), vxd.data() + vxd.rows());
+    return ret;
+}
+
 double partial::w;
 double partial::c1;
 double partial::c2;
 double partial::vmax;
 int partial::init_range;
 
-ArrayXd pso(double (*fn)(const ArrayXd&), const int n, const int d, const int max_itr, const double vmax = 1,
-            const int scale = 10, const int w = 1, const int c1 = 2, const int c2 = 2)
+inline vector<double> pso(double (*fn)(const double *), int n, int d, int max_itr, double vmax = 1, int scale = 10,
+                          int w = 1, int c1 = 2, int c2 = 2)
 {
     partial::w = w;
     partial::c1 = c1;
@@ -108,19 +113,19 @@ ArrayXd pso(double (*fn)(const ArrayXd&), const int n, const int d, const int ma
 
     partials.resize(n, partial(d, fn));
     gbest = ArrayXd(d).setZero();
-    gbest_value = fn(gbest);
+    gbest_value = fn(gbest.data());
     for (int i = 0; i < max_itr; i++)
     {
         std::vector<double> fitness(n);
-        #pragma omp parallel
+#pragma omp parallel
         {
             const int tid = omp_get_thread_num();
-            #pragma omp for
+#pragma omp for
             for (int j = 0; j < n; j++)
             {
                 partials[j].update_velocity(gbest, tid);
                 partials[j].update_postion();
-                fitness[j] = fn(partials[j].x);
+                fitness[j] = fn(partials[j].x.data());
                 partials[j].update_pbest(fitness[j]);
             }
         }
@@ -131,7 +136,7 @@ ArrayXd pso(double (*fn)(const ArrayXd&), const int n, const int d, const int ma
             gbest = partials[min_index].x;
         }
     }
-    return gbest;
+    return cast_to_vector(gbest);
 }
 } // namespace Tsolver
 #endif

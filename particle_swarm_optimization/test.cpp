@@ -34,7 +34,7 @@ inline double pow2(const double x)
     return pow(x,2);
 }
 
-double test_func1(const ArrayXd& v)
+double test_func1(const double* v)
 {
     //CROSS-IN-TRAY FUNCTION
     //argmin: https://www.sfu.ca/~ssurjano/crossit.html
@@ -46,7 +46,7 @@ double test_func1(const ArrayXd& v)
     return -0.0001 * pow(term, 0.1);
 }
 
-double test_func2(const ArrayXd &v)
+double test_func2(const double* &v)
 {
     //Gomez and Levy function
     //4*x^2 - 2.1*x^4 + x^6/3 + x*y - 4*y^2 + 4*y^4
@@ -58,7 +58,7 @@ double test_func2(const ArrayXd &v)
     return term1 + term2;
 }
 
-double test_func3(const ArrayXd& v)
+double test_func3(const double* v)
 {
     // f=0 at (1,3)
     const double x = v[0];
@@ -66,7 +66,7 @@ double test_func3(const ArrayXd& v)
     return pow(x + 2 * y - 7, 2) + pow(2 * x + y - 5, 2);
 }
 
-double test_func4(const ArrayXd &v)
+double test_func4(const double* v)
 {
     const double x1 = v[0];
     const double x2 = v[1];
@@ -78,7 +78,7 @@ double test_func4(const ArrayXd &v)
 int main()
 {
     const auto fn = test_func3;
-    ArrayXd v = Tsolver::pso(fn, 1000, 2, 1000);
+    std::vector v = Tsolver::pso(fn, 1000, 2, 1000);
     // std::cout << v << std::endl;
-    printf("argmin at (%lf, %lf), f(x) = %lf\n", v[0], v[1], fn(v));
+    printf("argmin at (%lf, %lf), f(x) = %lf\n", v[0], v[1], fn(v.data()));
 }
