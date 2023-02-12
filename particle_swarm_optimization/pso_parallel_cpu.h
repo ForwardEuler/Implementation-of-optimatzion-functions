@@ -36,7 +36,7 @@ namespace Tsolver
 using Eigen::ArrayXd, std::vector, Trand::rand;
 static Trand::seed rng(omp_get_max_threads());
 
-struct partial
+struct Particle
 {
     static double w, c1, c2, vmax;
     static int init_range;
@@ -45,7 +45,7 @@ struct partial
     ArrayXd pbest;
     double best_fitness;
 
-    partial(const int d, double (*fn)(const double *))
+    Particle(const int d, double (*fn)(const double *))
     {
         x = ArrayXd(d).setRandom();
         v = ArrayXd(d).setRandom();
@@ -92,35 +92,35 @@ inline vector<double> cast_to_vector(const ArrayXd& vxd)
     return ret;
 }
 
-double partial::w;
-double partial::c1;
-double partial::c2;
-double partial::vmax;
-int partial::init_range;
+double Particle::w;
+double Particle::c1;
+double Particle::c2;
+double Particle::vmax;
+int Particle::init_range;
 
 inline vector<double> pso(double (*fn)(const double *), int n, int d, int max_itr, double vmax = 1, int scale = 10,
                           int w = 1, int c1 = 2, int c2 = 2)
 {
-    partial::w = w;
-    partial::c1 = c1;
-    partial::c2 = c2;
-    partial::vmax = vmax;
-    partial::init_range = scale;
+    Particle::w = w;
+    Particle::c1 = c1;
+    Particle::c2 = c2;
+    Particle::vmax = vmax;
+    Particle::init_range = scale;
 
-    std::vector<partial> partials;
+    std::vector<Particle> partials;
     ArrayXd gbest;
     double gbest_value;
 
-    partials.resize(n, partial(d, fn));
+    partials.resize(n, Particle(d, fn));
     gbest = ArrayXd(d).setZero();
     gbest_value = fn(gbest.data());
     for (int i = 0; i < max_itr; i++)
     {
         std::vector<double> fitness(n);
-#pragma omp parallel
+        #pragma omp parallel
         {
             const int tid = omp_get_thread_num();
-#pragma omp for
+            #pragma omp for
             for (int j = 0; j < n; j++)
             {
                 partials[j].update_velocity(gbest, tid);
