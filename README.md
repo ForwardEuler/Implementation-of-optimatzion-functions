@@ -16,7 +16,7 @@ argmin of objective function will be returned as `std::vector<double>`
 
 ====================================================
 
-编译需要的C++线性代数库Eigen(https://eigen.tuxfamily.org/)
+编译需要C++线性代数库Eigen(https://eigen.tuxfamily.org/)
 和C++标准20+。
 
 算法将试图找到具有以下签名的C语言函数 f 的全局最小值。
